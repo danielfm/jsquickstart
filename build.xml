@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- You may freely edit this file. See commented blocks below for -->
+<!-- some examples of how to customize the build. -->
+
+<project name="JsQuickStart" default="build" basedir=".">
+    <description>Build extensions.</description>
+    <import file="priv/build-impl.xml"/>
+    <!--
+
+    There exist several targets which are by default empty and which can be 
+    used for execution of your tasks. These targets are usually executed 
+    before and after some main targets. They are: 
+
+      -pre-init:       called before the build properties initialization
+      -post-init:      called after the build properties initialization
+      -post-clean:     called after the build cleanup
+      -pre-build:      called before the build
+      -post-build:     called after the build
+      -pre-pack:       called before file minification/obfuscation
+      -post-pack:      called after file minification/obfuscation
+      -pre-test:       called before testing
+      -post-test:      called after testing
+      -pre-test-ci:    called before continuous integration testing
+      -post-test-ci:   called after continuous integration testing
+      -pre-doc-api:    called before API docs generation
+      -post-doc-api:   called after API docs generation
+      -pre-lint:       called before 
+      -post-lint:      called after 
+
+    (Targets beginning with '-' are not intended to be called on their own.)
+
+    Example of printing a message after the build:
+
+        <target name="-post-build">
+            <echo message="Build finished."/>
+        </target>
+
+    For list of available tasks check the imported priv/build-impl.xml file. 
+
+    -->
+</project>
