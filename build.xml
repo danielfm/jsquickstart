@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- You may freely edit this file. See commented blocks below for -->
-<!-- some examples of how to customize the build. -->
+<!--
+
+You may freely edit this file. See commented blocks below for some examples
+of how to customize the build.
+
+-->
 
 <project name="JsQuickStart" default="build" basedir=".">
     <description>Build extensions.</description>
@@ -21,8 +25,6 @@
       -post-pack:      called after file minification/obfuscation
       -pre-test:       called before testing
       -post-test:      called after testing
-      -pre-test-ci:    called before continuous integration testing
-      -post-test-ci:   called after continuous integration testing
       -pre-doc-api:    called before API docs generation
       -post-doc-api:   called after API docs generation
       -pre-lint:       called before 

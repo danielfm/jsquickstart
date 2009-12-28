@@ -13,11 +13,28 @@
     <!-- Fixed properties -->
     <property file="priv/private.properties"/>
 
-    <target name="init" depends="-pre-pre-init,-pre-init,-do-init,-post-init" description="Initializes the build properties"/>
-    <target name="-pre-pre-init">
-        <!-- You can override default properties using this file -->
-        <property file="${conf.dir}/build.properties"/>
+    <!-- Built-in execution modes -->
+    <target name="default" description="Default execution mode">
+        <echo message="Switching to default mode..."/>
+        <property name="mode" value="${mode.default}"/>
+    </target>
 
+    <target name="ci" description="Continuous integration execution mode">
+        <echo message="Switching to continuous integration mode..."/>
+        <property name="mode" value="${mode.ci}"/>
+    </target>
+
+    <!-- Main callable targets -->
+    <target name="init" depends="-pre-pre-init,-pre-init,-do-init,-post-init" description="Initializes the build properties"/>
+    <target name="clean" depends="init,-do-clean,-post-clean" description="Removes the build output files"/>
+    <target name="build" depends="-pre-pre-build,-pre-build,-do-build,-post-build" description="Bundles the JavaScript source files"/>
+    <target name="min" depends="build,-pre-min,-do-min,-post-min" description="Generates a minified version of the bundle"/>
+    <target name="test" depends="-pre-pre-test,-pre-test,-do-test,-post-test" description="Runs the unit tests"/>
+    <target name="doc-api" depends="-pre-pre-doc-api,-pre-doc-api,-do-doc-api,-post-doc-api" description="Generates the API documentation"/>
+    <target name="lint" depends="build,-pre-lint,-do-lint,-post-lint" description="Runs JSLint for both main code and test code"/>
+
+    <!-- Init -->
+    <target name="-pre-pre-init">
         <!-- Loads Ant-Contrib tasks -->
         <taskdef resource="net/sf/antcontrib/antcontrib.properties">
             <classpath>
@@ -27,28 +44,33 @@
     </target>
 
     <target name="-do-init">
-        <!-- Loads the default build properties -->
+        <!-- You can override default properties using this file -->
+        <property file="${conf.dir}/${mode}/build.properties"/>
+        <property file="${conf.dir}/${mode.default}/build.properties"/>
+
+        <!-- Default build properties -->
         <property file="priv/build-impl.properties"/>
 
-        <!-- Information about the project -->
-        <property file="${conf.dir}/project.properties"/>
+        <!-- Project information -->
+        <property file="${conf.dir}/${mode}/project.properties"/>
+        <property file="${conf.dir}/${mode.default}/project.properties"/>
 
-        <!-- JavaScript main source files -->
+        <!-- Convenient reference to JavaScript main source files -->
         <fileset dir="${main.dir}" id="main.js.files">
             <include name="**/*.js"/>
         </fileset>
 
-        <!-- JavaScript test source files -->
+        <!-- Convenient reference to JavaScript test source files -->
         <fileset dir="${test.dir}" id="test.js.files">
             <include name="**/*.js"/>
         </fileset>
 
-        <!-- Depends on both .properties -->
+        <!-- Other properties -->
         <property name="project.bundle.file" value="${build.out.dir}/${project.name}-${project.version}.js"/>
         <property name="project.bundle.min.file" value="${build.out.dir}/${project.name}-${project.version}-min.js"/>
     </target>
 
-    <target name="clean" depends="init,-do-clean,-post-clean" description="Removes the build output files"/>
+    <!-- Clean -->
     <target name="-do-clean">
         <echo message="Removing build output files..."/>
         <delete dir="${build.dir}"/>
@@ -56,10 +78,11 @@
         <echo message="Done."/>
     </target>
 
-    <target name="build" depends="-pre-pre-build,-pre-build,-do-build,-post-build" description="Bundles the JavaScript source files"/>
+    <!-- Build -->
     <target name="-pre-pre-build" depends="init">
         <mkdir dir="${build.dir}"/>
     </target>
+
     <target name="-do-build">
         <echo message="Building JavaScript bundle..."/>
         <concat destfile="${project.bundle.file}" fixlastline="true">
@@ -75,7 +98,7 @@
         <echo message="Bundle created at ${project.bundle.path}"/>
     </target>
 
-    <target name="min" depends="build,-pre-min,-do-min,-post-min" description="Generates a minified version of the bundle with YUICompress"/>
+    <!-- Minify -->
     <target name="-do-min">
         <echo message="Minifying JavaScript bundle..."/>
         <java jar="${yuicompressor.jar}" fork="true">
@@ -88,12 +111,14 @@
         <echo message="Minified bundle created at ${project.bundle.min.path}"/>
     </target>
 
+    <!-- Compress -->
     <target name="min-gz" depends="min" description="GZips the minified bundle">
         <echo message="Compressing minified bundle..."/>
         <gzip src="${project.bundle.min.file}" destfile="${project.bundle.min.file}.gz"/>
     </target>
 
-    <target name="test-server" depends="init" description="Starts the JsTestDriver server">
+    <!-- Test -->
+    <target name="test-server" depends="init" description="Starts the test server">
         <echo message="Starting test server..."/>
         <java jar="${jstestdriver.jar}" fork="true">
             <arg value="--port"/>
@@ -101,7 +126,7 @@
         </java>
     </target>
 
-    <target name="test-capture" depends="init" description="Captures the configured browsers with JsTestDriver">
+    <target name="test-capture" depends="init" description="Captures the configured browsers">
         <echo message="Capturing browsers..."/>
         <foreach list="${jstestdriver.browser}" param="browser" target="-browser-capture" inheritall="true"/>
         <echo message="Done."/>
@@ -112,8 +137,14 @@
         </exec>
     </target>
 
-    <target name="test" depends="-pre-pre-test,-pre-test,-do-test,-post-test" description="Runs the unit tests with JsTestDriver"/>
     <target name="-pre-pre-test" depends="build">
+        <!-- If the config file exists on the given mode config dir, use it -->
+        <!-- Otherwise, fallback to the default one -->
+        <condition property="jstestdriver.conf.file" value="${conf.dir}/${mode}/${jstestdriver.conf}" else="${conf.dir}/${mode.default}/${jstestdriver.conf}">
+            <available file="${conf.dir}/${mode}/${jstestdriver.conf}" type="file"/>
+        </condition>
+
+        <!-- Copies the configuration file to the build directory -->
         <property name="jstestdriver.conf.parsed" value="${build.dir}/${jstestdriver.conf}"/>
         <copy file="${jstestdriver.conf.file}" todir="${build.dir}" overwrite="true">
             <filterchain>
@@ -121,8 +152,30 @@
                 <expandproperties/>
             </filterchain>
       </copy>
+
+      <!-- Creates a directory to store the test reports -->
+      <if>
+          <equals arg1="${mode}" arg2="${mode.ci}"/>
+          <then>
+              <mkdir dir="${build.testreports.dir}"/>
+          </then>
+      </if>
     </target>
+
+    <!-- This target behaves differently according to the current mode -->
     <target name="-do-test">
+        <if>
+            <equals arg1="${mode}" arg2="${mode.ci}"/>
+            <then>
+                <runtarget target="-do-test-ci"/>
+            </then>
+            <else>
+                <runtarget target="-do-test-default"/>
+            </else>
+        </if>
+    </target>
+
+    <target name="-do-test-default">
         <echo message="Running tests..."/>
         <java jar="${jstestdriver.jar}" fork="true" failonerror="true">
             <arg value="--config"/>
@@ -135,13 +188,8 @@
         <echo message="Done."/>
     </target>
 
-    <target name="test-ci" depends="-pre-pre-test-ci,-pre-test-ci,-do-test-ci,-post-test-ci" description="Runs the unit tests with JsTestDriver during continuous integration"/>
-    <target name="-pre-pre-test-ci" depends="-pre-pre-test">
-        <mkdir dir="${build.testreports.dir}"/>
-    </target>
     <target name="-do-test-ci">
         <echo message="Running tests..."/>
-        <!-- Just like in 'test', but it outputs results to XML -->
         <java jar="${jstestdriver.jar}" fork="true" failonerror="true">
             <arg value="--config"/>
             <arg value="${jstestdriver.conf.parsed}"/>
@@ -155,8 +203,15 @@
         <echo message="Test reports created at ${build.testreports.dir}"/>
     </target>
 
-    <target name="doc-api" depends="-pre-pre-doc-api,-pre-doc-api,-do-doc-api,-post-doc-api" description="Generates the API documentation with JsDoc-Toolkit"/>
+    <!-- Documentation -->
     <target name="-pre-pre-doc-api" depends="init">
+        <!-- If the config file exists on the given mode config dir, uses it -->
+        <!-- Otherwise, fallback to the default one -->
+        <condition property="jsdoc.conf.file" value="${conf.dir}/${mode}/${jsdoc.conf}" else="${conf.dir}/${mode.default}/${jsdoc.conf}">
+            <available file="${conf.dir}/${mode}/${jsdoc.conf}" type="file"/>
+        </condition>
+
+        <!-- Copies the configuration file to the build directory -->
         <property name="jsdoc.conf.parsed" value="${build.dir}/${jsdoc.conf}"/>
         <copy file="${jsdoc.conf.file}" todir="${build.dir}" overwrite="true">
             <filterchain>
@@ -165,6 +220,7 @@
             </filterchain>
       </copy>
     </target>
+
     <target name="-do-doc-api">
         <echo message="Creating API documentation..."/>
         <property name="doc.api.path" location="${doc.api.dir}"/>
@@ -179,7 +235,7 @@
         <echo message="API documentation created at ${doc.api.path}"/>
     </target>
 
-    <target name="lint" depends="build,-pre-lint,-do-lint,-post-lint" description="Runs JSLint for both main code and test code"/>
+    <!-- JSLint -->
     <target name="-do-lint">
         <echo message="Running JSLint..."/>
         <pathconvert pathsep=" " property="jslint.main.files" refid="main.js.files"/>
@@ -207,9 +263,6 @@
 
     <target name="-pre-test"/>
     <target name="-post-test"/>
-
-    <target name="-pre-test-ci"/>
-    <target name="-post-test-ci"/>
 
     <target name="-pre-doc-api"/>
     <target name="-post-doc-api"/>

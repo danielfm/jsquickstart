@@ -23,8 +23,8 @@ Features
 * Configurable bundle generation;
 * Minification/compression with `YUICompressor`_;
 * Automatic API documentation generation with `JsDoc-Toolkit`_;
-* Unit testing and continuous integration support with `JsTestDriver`_ and
-  `JsHamcrest`_;
+* Easy unit testing with `JsTestDriver`_ and `JsHamcrest`_;
+* Two built-in execution modes: ``default`` and ``ci`` (continuous integration);
 * Code quality inspection with `JsLint4Java`_;
 * Cross-platform and free to use both in personal and commercial projects;
 
@@ -32,25 +32,26 @@ Features
 Getting Started
 ---------------
 
-After download and extract the JsQuickStart archive, you end up with a sample,
+After download and extract the JsQuickStart archive, you end up with a working,
 pre-configured JavaScript project.
 
 
 Build Targets
 `````````````
 
-If you have already installed the `required`_ dependencies, run the following
-command line to display all available build targets::
+If you have already installed the required dependencies, run the following
+command line to display the available build targets::
 
     $ ant -p
 
-The following command line runs the default target, which builds the bundle::
+The following command line runs the build target::
 
-    $ ant
+    $ ant build
 
-You can also run one or more targets in a given order::
+You can also run several targets in a given order::
 
     $ ant clean min doc-api
+
 
 Unit Testing And Linting
 ````````````````````````
@@ -79,14 +80,32 @@ and potential bugs with `JsLint4Java`_::
     $ ant lint
 
 
-Continuous Integration
-``````````````````````
+Continuous Integration Support
+``````````````````````````````
 
-The command line below runs the tests and outputs the test results to XML files
-that can be easily consumed by a wide variety of tools, such as continuous
+The following command line runs the tests and outputs the test results to XML
+files that can be easily consumed by a wide variety of tools, such as continuous
 integration servers::
 
-    $ ant test-ci
+    $ ant ci test
+
+The difference between ``ant test`` and ``ant ci test`` is that the former
+runs ``test`` in the ``default`` mode, and the latter runs ``test`` in the
+``ci`` (continuous integration) mode.
+
+
+Execution Modes
+```````````````
+
+JsQuickStart supports the concept of per mode configuration. Currently,
+JsQuickStart supports two execution modes: ``default`` and ``ci`` (continuous
+integration).
+
+To run one or more targets on a given mode::
+
+    $ ant [mode] [target...]
+
+If no mode is provided, the given tasks are executed in the ``default`` mode.
 
 
 Description Of Contents
@@ -96,8 +115,8 @@ build
   Stores the build output artifacts.
 
 config
-  Configuration files for the project. These files allows you to quickly
-  override most build options whithout touching the XML files.
+  Configuration files for each execution mode. These files allow you to quickly
+  override most build options without touching XML files.
 
 copying
   License files for all bundled dependencies.
@@ -140,12 +159,10 @@ build.xml
 Dependencies
 ------------
 
-.. _required:
-
 Required
 ````````
 
-1. `Java`_ Development Kit 5.0+;
+1. `Java`_ Development Kit 6.0+;
 2. Apache `Ant`_ 1.7+;
 
 Bundled
@@ -157,6 +174,11 @@ Bundled
 4. `JsLint4Java`_ 1.3.3;
 5. `JsTestDriver`_ 1.2;
 6. `YUICompressor`_ 2.4.2;
+
+
+.. note::
+   This project is under **heavy development**, so things might change **without
+   any notice** whatsoever.
 
 
 .. _Destaquenet Technology Solutions: http://www.destaquenet.com
