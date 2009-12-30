@@ -17,14 +17,15 @@ brazilian software development and consultancy startup.
 Features
 --------
 
-* `Ant`_-based build script customizable via properties and/or hook targets
-  (``-pre-xxxx`` and ``-post-xxxx`` for most build targets);
+* Very flexible `Ant`_-based build script, customizable via properties and/or
+  hook targets (``-pre-xxxx`` and ``-post-xxxx`` for most build targets);
 * Standard directory layout that keeps your code organized;
 * Configurable bundle generation;
 * Minification/compression with `YUICompressor`_;
 * Automatic API documentation generation with `JsDoc-Toolkit`_;
 * Easy unit testing with `JsTestDriver`_ and `JsHamcrest`_;
-* Two built-in execution modes: ``default`` and ``ci`` (continuous integration);
+* Per mode configuration;
+* Built-in support for continuous integration;
 * Code quality inspection with `JsLint4Java`_;
 * Cross-platform and free to use both in personal and commercial projects;
 
@@ -44,7 +45,7 @@ command line to display the available build targets::
 
     $ ant -p
 
-The following command line runs the build target::
+Running the ``build`` target::
 
     $ ant build
 
@@ -83,29 +84,28 @@ and potential bugs with `JsLint4Java`_::
 Continuous Integration Support
 ``````````````````````````````
 
-The following command line runs the tests and outputs the test results to XML
-files that can be easily consumed by a wide variety of tools, such as continuous
-integration servers::
+The following command line runs the tests and outputs XML reports which can be
+used to feed continuous integration systems like `Hudson`_ or `CruiseControl`_::
 
     $ ant ci test
 
 The difference between ``ant test`` and ``ant ci test`` is that the former
-runs ``test`` in the ``default`` mode, and the latter runs ``test`` in the
-``ci`` (continuous integration) mode.
+runs ``test`` in the default mode, and the latter runs ``test`` in the
+continuous integration mode.
 
 
 Execution Modes
 ```````````````
 
 JsQuickStart supports the concept of per mode configuration. Currently,
-JsQuickStart supports two execution modes: ``default`` and ``ci`` (continuous
-integration).
+JsQuickStart provides two execution modes out of the box: ``default`` and ``ci``
+(for continuous integration).
 
 To run one or more targets on a given mode::
 
     $ ant [mode] [target...]
 
-If no mode is provided, the given tasks are executed in the ``default`` mode.
+If no mode is provided, the given targets are executed in the ``default`` mode.
 
 
 Description Of Contents
